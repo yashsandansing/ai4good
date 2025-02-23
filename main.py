@@ -1,7 +1,7 @@
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
 from llama_index.core.indices.document_summary import DocumentSummaryIndex
 from llama_index.core.response_synthesizers import TreeSummarize
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, HTTPException
 
 from langchain.output_parsers import PydanticOutputParser
 
@@ -81,7 +81,7 @@ async def process_legal_document(file: UploadFile):
     try:
         result = get_summary_and_else(temp_path)
     except Exception as e:
-        print(str(e))
+        raise HTTPException(404, detail=str(e))
     finally:
         os.remove(temp_path)  # Clean up temporary file
     
