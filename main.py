@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List
 import os
 import tempfile
+from fastapi.middleware.cors import CORSMiddleware
 
 def get_summary_and_else(file_path):
     # Load and split document into pages
@@ -65,6 +66,15 @@ class DocumentAnalysis(BaseModel):
 
 
 app = FastAPI()
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def hw():
