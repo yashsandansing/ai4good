@@ -7,6 +7,8 @@ from langchain.output_parsers import PydanticOutputParser
 
 from pydantic import BaseModel, Field
 from typing import List
+import os
+import tempfile
 
 def get_summary_and_else(file_path):
     # Load and split document into pages
@@ -19,14 +21,14 @@ def get_summary_and_else(file_path):
         response_mode="tree_summarize",
         show_progress=True,
         summary_query = (
-                        "You are an expert document simplifier + summarizer/n"
-                        "Given the following page's context, return the following results in a json:"
+                        "You are an expert at simplifying complex documents and identifying red flags and loopholes\n"
+                        "Given the following page's context, return the following results:\n"
                         "summary: Comprehensive summary of all the pages.\n"
                         "complexity_rating: Assign a score from 1 to 10 where 10 is the most complex a document can get for the average person.\n"
                         "red_flag_detection: Identify any potential risky clauses\n"
                         "figures_extraction: Extract any necessary financial amounts/deadlines\n"
                         "loopholes: Flag vague or ambiguous terms\n."
-                        "Return only the requested information in json format, nothing else.\n"
+                        "Return only the requested information, nothing else.\n"
                         )
     )
     
@@ -69,7 +71,18 @@ def hw():
     return 'Hello World'
 
 @app.post("/process-legal-doc/")
-def process_legal_document(file: UploadFile):
-    file_path = file.filename
-    res = get_summary_and_else(file_path)
-    return res
+async def process_legal_document(file: UploadFile):
+    # Create a temporary file with proper extension
+    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+        content = await file.read()
+        temp_file.write(content)
+        temp_path = temp_file.name
+    
+    try:
+        result = get_summary_and_else(temp_path)
+    except Exception as e:
+        print(str(e))
+    finally:
+        os.remove(temp_path)  # Clean up temporary file
+    
+    return result
